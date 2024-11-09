@@ -54,8 +54,8 @@ for (id_rand in 1:num_randomizations){
 
 ### matrix of exposure
 exposure_matrix <- sapply(c(1:num_randomizations), function(i){
-  Z_temp = Z[,i]
-  f_temp = exposure(Z_temp,K)
+  Z_temp <- Z[,i]
+  f_temp <- exposure(Z_temp,K)
   return(f_temp)
 })
 
@@ -75,8 +75,8 @@ colnames(Ypot) <- c('exp0','exp1')
 obs_index <- 1
 exposure_obs <- exposure_matrix[,obs_index]
 observation <- rep(NA,N)
-observation[exposure_obs == 0] <-Ypot$exp0[exposure_obs == 0]
-observation[exposure_obs == 1] <-Ypot$exp1[exposure_obs == 1]
+observation[exposure_obs == 0] <- Ypot$exp0[exposure_obs == 0]
+observation[exposure_obs == 1] <- Ypot$exp1[exposure_obs == 1]
 
 set.seed(113)
 ### IRT with empirical distribution

@@ -1,0 +1,104 @@
+#' Power Calculation with Multiple Imputation
+#'
+#' This function calculates the statistical power of the test using multiple
+#' imputation to handle missing data.
+#'
+#' @param null A vector of two values representing two exposure groups specified
+#' in the null hypothesis.
+#' @param Ypot A matrix containing potential outcomes for each exposure group in
+#' the 'null' set; the first column corresponds to the first exposure and the
+#' second to the second exposure
+#' @param exposure_matrix A matrix of dimension (number of units x number of
+#' randomizations, i.e. assignments),
+#' where each column represents different exposure assignments for
+#' randomizations.
+#' @param impute_function A function used for imputing missing values; defaults
+#' to 'Imputation_sample'.
+#' @param statistic A function used to calculate the test statistic; defaults to
+#' 'test_statistic', which is the absolute value of the difference-in-means test
+#' statistic.
+#' @param alpha A numeric value representing the significance level for the
+#' test; defaults to 0.05.
+#'
+#' @return A list containing:
+#'   - `p`: A vector of p-values calculated across randomizations.
+#'   - `power`: The proportion of p-values that are less than or equal to the
+#'   significance level (alpha), representing the statistical power.
+#'
+#' @examples
+#' # This example illustrates the calculation of the power of the
+#' # imputation-based randomization test (IRT) in the setting of clustered
+#' # interference.
+#'
+#' library(imprt)
+#' N <- 300
+#' K <- 150
+#' size <- N/K # size of clusters
+#' K_treat <- floor(K/2) # number of treated clusters
+#'
+#' # set of randomly selected treatment assignments
+#' set.seed(113)
+#' num_randomizations <- 1000
+#' housestruct <- rep(N/K,K)
+#'
+#' Z <- matrix(0, nrow=N, ncol=(num_randomizations))
+#' for (id_rand in 1:num_randomizations){
+#'   W <- matrix(rep(0,N),nc=K)
+#'   treat_cluster <- sort(sample(c(1:K),K_treat))
+#'   treat_unit <- apply(as.matrix(housestruct[treat_cluster]),1,FUN = function(x){
+#'     sample(c(1:x),1)
+#'   })
+#'   for (i in 1:K_treat){
+#'     W[treat_unit[i],treat_cluster[i]] <- 1
+#'   }
+#'   Z[,id_rand] <- c(W)
+#' }
+#'
+#' exposure_matrix <- sapply(c(1:num_randomizations), function(i){
+#'   Z_temp = Z[,i]
+#'   f_temp = exposure(Z_temp,K)
+#'   return(f_temp)
+#' })
+#'
+#' null <- c(0,1)
+#'
+#' # generate potential outcomes
+#' set.seed(113)
+#' Ypot <- matrix(0, N, 2)
+#' tau <- 0.5
+#' Ypot[,1] <- rnorm(N, 0, 1)
+#' Ypot[,2] <- Ypot[,1] + tau
+#' Ypot <- data.frame(Ypot)
+#' colnames(Ypot) <- c('exp0','exp1')
+#'
+#' set.seed(113)
+#' result <- power_MI(null,Ypot,exposure_matrix,
+#'                    impute_function=Imputation_sample,
+#'                    statistic=test_statistic)
+#'
+#' hist(result$p)
+#' result$power
+#'
+#' @export
+power_MI <- function(null=c(0,1),Ypot,exposure_matrix,
+                     impute_function=Imputation_sample,
+                     statistic=test_statistic,alpha=0.05){
+  num_randomizations <- ncol(exposure_matrix)
+  n <- nrow(Ypot)
+  Ya <- Ypot[,1]
+  Yb <- Ypot[,2]
+  p_list <- c()
+  for (t in 1:num_randomizations) {
+    if (t %% 100 == 0){
+      cat("Process:", t, "/", num_randomizations, "\n")
+    }
+    exposure_obs <- exposure_matrix[,t]
+    observation <- rep(NA,n)
+    observation[exposure_obs == null[1]] <- Ya[exposure_obs == null[1]]
+    observation[exposure_obs == null[2]] <- Yb[exposure_obs == null[2]]
+    p_list[t] <- pvalue_MI(null,exposure_matrix,observation,
+                           obs_index=t,impute_function,statistic)
+  }
+  power <- sum(p_list <= alpha)/length(p_list)
+  return(list('p'=p_list,'power'=power))
+}

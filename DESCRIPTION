@@ -1,13 +1,19 @@
-Package: imprt
-Title: What the Package Does (One Line, Title Case)
+Title: Imputation-based Randomization Test
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Authors@R: c(
+	person("Tingxuan", "Han", , "hantingxuan113@gmail.com", role = c("aut", "cre")),
+	person("Ke", "Zhu", role = c("aut"),
+           comment = c(ORCID = "0000-0001-8778-0086")),
+        person("Hanzhong", "Liu", role = c("aut")),
+	person("Ke", "Deng", role = c("aut")))
+Description: The package provides functions for implementing imputation-based randomization test in the setting of interference.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     stats
+URL: https://github.com/htx113/imprt
+BugReports: https://github.com/htx113/imprt/issues
+Depends: R (>= 4.0.0)
+
